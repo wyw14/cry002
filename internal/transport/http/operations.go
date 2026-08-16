@@ -7,6 +7,7 @@ import (
 	"github.com/wyw14/cry002/internal/domain"
 	appmw "github.com/wyw14/cry002/internal/middleware"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -113,7 +114,7 @@ func (h *Handler) Download(c *gin.Context) {
 		return
 	}
 	defer r.Close()
-	c.Header("Content-Disposition", "attachment; filename="+meta.OriginalName)
+	c.Header("Content-Disposition", "attachment; filename="+strconv.Quote(meta.OriginalName))
 	c.DataFromReader(http.StatusOK, meta.Size, meta.ContentType, r, nil)
 }
 func (h *Handler) Audits(c *gin.Context) {

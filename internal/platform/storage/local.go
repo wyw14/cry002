@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/wyw14/cry002/internal/domain"
 )
@@ -26,7 +27,19 @@ func NewLocal(root string) (*Local, error) {
 }
 
 func (s *Local) resolve(key string) (string, error) {
-	return filepath.Join(s.root, filepath.FromSlash(key)), nil
+	if key == "" || filepath.IsAbs(key) || strings.ContainsRune(key, '\x00') {
+		return "", domain.ErrValidation
+	}
+	clean := filepath.Clean(filepath.FromSlash(key))
+	if clean == "." || clean == ".." || strings.HasPrefix(clean, ".."+string(filepath.Separator)) {
+		return "", domain.ErrValidation
+	}
+	target := filepath.Join(s.root, clean)
+	rel, err := filepath.Rel(s.root, target)
+	if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+		return "", domain.ErrValidation
+	}
+	return target, nil
 }
 
 func (s *Local) Put(ctx context.Context, key string, r io.Reader, size int64) (string, string, error) {
@@ -63,7 +76,7 @@ func (s *Local) Put(ctx context.Context, key string, r io.Reader, size int64) (s
 		return "", "", err
 	}
 	rel, _ := filepath.Rel(s.root, target)
-	return filepath.ToSlash(rel), hex.EncodeToString([]byte{}), nil
+	return filepath.ToSlash(rel), hex.EncodeToString(h.Sum(nil)), nil
 }
 
 func (s *Local) Open(ctx context.Context, key string) (io.ReadCloser, error) {
