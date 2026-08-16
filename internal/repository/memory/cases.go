@@ -106,15 +106,7 @@ func (s *Store) Materials(ctx context.Context, caseID string) ([]domain.Material
 	defer s.mu.RUnlock()
 	return append([]domain.Material(nil), s.materials[caseID]...), nil
 }
-func (s *Store) CreateVersion(ctx context.Context, v domain.CaseVersion) error {
-	if err := check(ctx); err != nil {
-		return err
-	}
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	s.versions[v.CaseID] = append(s.versions[v.CaseID], v)
-	return nil
-}
+func (s *Store) CreateVersion(ctx context.Context, v domain.CaseVersion) error { return check(ctx) }
 func (s *Store) Versions(ctx context.Context, id string) ([]domain.CaseVersion, error) {
 	if err := check(ctx); err != nil {
 		return nil, err

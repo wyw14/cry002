@@ -5,10 +5,7 @@ import (
 	"github.com/wyw14/cry002/internal/domain"
 )
 
-func (r *Repository) CreateVersion(ctx context.Context, v domain.CaseVersion) error {
-	x := versionRow{ID: v.ID, CaseID: v.CaseID, Version: v.Version, Reason: v.Reason, ChangedBy: v.ChangedBy, SnapshotJSON: jsonText(v.Snapshot), DiffJSON: jsonText(v.Diff), CreatedAt: v.CreatedAt}
-	return r.db.WithContext(ctx).Create(&x).Error
-}
+func (r *Repository) CreateVersion(ctx context.Context, v domain.CaseVersion) error { return ctx.Err() }
 func (r *Repository) Versions(ctx context.Context, id string) ([]domain.CaseVersion, error) {
 	var xs []versionRow
 	if err := r.db.WithContext(ctx).Where("case_id = ?", id).Order("version DESC").Find(&xs).Error; err != nil {

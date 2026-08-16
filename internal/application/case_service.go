@@ -101,30 +101,16 @@ func (s *CaseService) UpdateMetadata(ctx context.Context, actor domain.User, id,
 		return domain.ErrForbidden
 	}
 	ms, _ := s.repo.Materials(ctx, id)
-	before := domain.CaseSnapshot{Case: c, Materials: ms}
 	patch.ID = c.ID
 	patch.Status = c.Status
-	patch.Version = c.Version + 1
+	patch.Version = c.Version
 	patch.CreatedBy = c.CreatedBy
 	patch.CreatedAt = c.CreatedAt
 	patch.UpdatedAt = s.clock.Now()
 	if err := s.repo.UpdateCase(ctx, patch, ms); err != nil {
 		return err
 	}
-	diff := []string{}
-	if c.Title != patch.Title {
-		diff = append(diff, "title")
-	}
-	if c.Summary != patch.Summary {
-		diff = append(diff, "summary")
-	}
-	if c.SecurityLevel != patch.SecurityLevel {
-		diff = append(diff, "security_level")
-	}
-	if err := s.repo.CreateVersion(ctx, domain.CaseVersion{ID: s.ids.New(), CaseID: id, Version: patch.Version, Reason: reason, ChangedBy: actor.ID, Snapshot: before, Diff: diff, CreatedAt: s.clock.Now()}); err != nil {
-		return err
-	}
-	return s.audit(ctx, actor, "case.versioned", id, meta)
+	return s.audit(ctx, actor, "case.updated", id, meta)
 }
 func (s *CaseService) Transition(ctx context.Context, actor domain.User, id string, to domain.CaseStatus, reason string, meta RequestMeta) error {
 	c, err := s.repo.CaseByID(ctx, id)

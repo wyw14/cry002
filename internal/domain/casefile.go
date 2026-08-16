@@ -119,7 +119,7 @@ func (c CaseFile) CanTransition(to CaseStatus, actor User) bool {
 	}
 }
 func (s CaseSnapshot) Digest() string {
-	parts := []string{s.Case.CaseNumber, s.Case.Title, s.Case.Summary, string(s.Case.Status)}
+	parts := []string{s.Case.CaseNumber, string(s.Case.Status)}
 	for _, m := range s.Materials {
 		parts = append(parts, m.ID, m.Title)
 	}
