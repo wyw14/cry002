@@ -100,17 +100,61 @@ func (s *CaseService) UpdateMetadata(ctx context.Context, actor domain.User, id,
 	if actor.Role != domain.RoleArchivist && !actor.IsAdministrator() {
 		return domain.ErrForbidden
 	}
-	ms, _ := s.repo.Materials(ctx, id)
+	oldMaterials, err := s.repo.Materials(ctx, id)
+	if err != nil {
+		return err
+	}
+	diff := diffCaseSnapshot(domain.CaseSnapshot{Case: c, Materials: oldMaterials}, domain.CaseSnapshot{Case: patch, Materials: oldMaterials})
 	patch.ID = c.ID
 	patch.Status = c.Status
-	patch.Version = c.Version
+	patch.Version = c.Version + 1
 	patch.CreatedBy = c.CreatedBy
 	patch.CreatedAt = c.CreatedAt
 	patch.UpdatedAt = s.clock.Now()
-	if err := s.repo.UpdateCase(ctx, patch, ms); err != nil {
+	now := s.clock.Now()
+	version := domain.CaseVersion{ID: s.ids.New(), CaseID: id, Version: c.Version, Reason: reason, ChangedBy: actor.ID, Snapshot: domain.CaseSnapshot{Case: c, Materials: oldMaterials}, Diff: diff, CreatedAt: now}
+	if err := s.repo.CreateVersion(ctx, version); err != nil {
+		return err
+	}
+	if err := s.repo.UpdateCase(ctx, patch, oldMaterials); err != nil {
 		return err
 	}
 	return s.audit(ctx, actor, "case.updated", id, meta)
+}
+
+func diffCaseSnapshot(old, neu domain.CaseSnapshot) []string {
+	var out []string
+	if old.Case.CaseNumber != neu.Case.CaseNumber {
+		out = append(out, "case_number: "+old.Case.CaseNumber+" -> "+neu.Case.CaseNumber)
+	}
+	if old.Case.Title != neu.Case.Title {
+		out = append(out, "title: "+old.Case.Title+" -> "+neu.Case.Title)
+	}
+	if old.Case.Summary != neu.Case.Summary {
+		out = append(out, "summary changed")
+	}
+	if old.Case.ClassificationID != neu.Case.ClassificationID {
+		out = append(out, "classification_id: "+old.Case.ClassificationID+" -> "+neu.Case.ClassificationID)
+	}
+	if old.Case.SecurityLevel != neu.Case.SecurityLevel {
+		out = append(out, "security_level: "+string(old.Case.SecurityLevel)+" -> "+string(neu.Case.SecurityLevel))
+	}
+	if old.Case.Retention != neu.Case.Retention {
+		out = append(out, "retention: "+string(old.Case.Retention)+" -> "+string(neu.Case.Retention))
+	}
+	if old.Case.ResponsibleDepartment != neu.Case.ResponsibleDepartment {
+		out = append(out, "responsible_department: "+old.Case.ResponsibleDepartment+" -> "+neu.Case.ResponsibleDepartment)
+	}
+	if old.Case.HandlerID != neu.Case.HandlerID {
+		out = append(out, "handler_id: "+old.Case.HandlerID+" -> "+neu.Case.HandlerID)
+	}
+	if old.Case.Year != neu.Case.Year {
+		out = append(out, "year changed")
+	}
+	if len(out) == 0 {
+		out = append(out, "metadata updated")
+	}
+	return out
 }
 func (s *CaseService) Transition(ctx context.Context, actor domain.User, id string, to domain.CaseStatus, reason string, meta RequestMeta) error {
 	c, err := s.repo.CaseByID(ctx, id)
