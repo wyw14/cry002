@@ -3,6 +3,8 @@ package postgres
 import (
 	"context"
 	"github.com/wyw14/cry002/internal/domain"
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 	"time"
 )
 
@@ -41,24 +43,26 @@ func (r *Repository) UpdateBorrow(ctx context.Context, b domain.BorrowRequest) e
 	return r.db.WithContext(ctx).Save(&x).Error
 }
 func (r *Repository) CheckoutCase(ctx context.Context, cid, bid string, now time.Time) error {
-	var c caseRow
-	if err := r.db.WithContext(ctx).First(&c, "id = ?", cid).Error; err != nil {
-		return dbError(err)
-	}
-	var b borrowRow
-	if err := r.db.WithContext(ctx).First(&b, "id = ?", bid).Error; err != nil {
-		return dbError(err)
-	}
-	if c.Status != string(domain.CaseArchived) || b.CaseID != cid || b.Status != string(domain.BorrowApproved) {
-		return domain.ErrConflict
-	}
-	c.Status = string(domain.CaseBorrowed)
-	c.UpdatedAt = now
-	b.Status = string(domain.BorrowCheckedOut)
-	b.CheckedOutAt = &now
-	b.UpdatedAt = now
-	if err := r.db.WithContext(ctx).Save(&c).Error; err != nil {
-		return err
-	}
-	return r.db.WithContext(ctx).Save(&b).Error
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var c caseRow
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&c, "id = ?", cid).Error; err != nil {
+			return dbError(err)
+		}
+		var b borrowRow
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&b, "id = ?", bid).Error; err != nil {
+			return dbError(err)
+		}
+		if c.Status != string(domain.CaseArchived) || b.CaseID != cid || b.Status != string(domain.BorrowApproved) {
+			return domain.ErrConflict
+		}
+		c.Status = string(domain.CaseBorrowed)
+		c.UpdatedAt = now
+		b.Status = string(domain.BorrowCheckedOut)
+		b.CheckedOutAt = &now
+		b.UpdatedAt = now
+		if err := tx.Save(&c).Error; err != nil {
+			return err
+		}
+		return tx.Save(&b).Error
+	})
 }
