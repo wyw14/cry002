@@ -60,7 +60,11 @@ func (s *BorrowService) Checkout(ctx context.Context, actor domain.User, id stri
 	if b.ApplicantID != actor.ID && actor.Role != domain.RoleArchivist && !actor.IsAdministrator() {
 		return domain.ErrForbidden
 	}
-	if b.Status != domain.BorrowApproved {
+	caseFile, err := s.repo.CaseByID(ctx, b.CaseID)
+	if err != nil {
+		return err
+	}
+	if !b.CanCheckout(caseFile.Status) {
 		return domain.ErrInvalidState
 	}
 	if err := s.repo.CheckoutCase(ctx, b.CaseID, id, s.clock.Now()); err != nil {

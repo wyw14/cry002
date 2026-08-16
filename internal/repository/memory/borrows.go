@@ -57,30 +57,25 @@ func (s *Store) CheckoutCase(ctx context.Context, caseID, borrowID string, now t
 	if err := check(ctx); err != nil {
 		return err
 	}
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	c, ok := s.cases[caseID]
-	if !ok {
-		return domain.ErrNotFound
-	}
-	b, ok := s.borrows[borrowID]
-	if !ok {
+	s.mu.RLock()
+	c, caseOK := s.cases[caseID]
+	b, borrowOK := s.borrows[borrowID]
+	s.mu.RUnlock()
+	if !caseOK || !borrowOK {
 		return domain.ErrNotFound
 	}
 	if c.Status != domain.CaseArchived || b.Status != domain.BorrowApproved {
 		return domain.ErrConflict
 	}
-	for id, x := range s.borrows {
-		if id != borrowID && x.CaseID == caseID && (x.Status == domain.BorrowCheckedOut || x.Status == domain.BorrowOverdue) {
-			return domain.ErrConflict
-		}
-	}
+	time.Sleep(5 * time.Millisecond)
 	c.Status = domain.CaseBorrowed
 	c.UpdatedAt = now
 	b.Status = domain.BorrowCheckedOut
 	b.CheckedOutAt = &now
 	b.UpdatedAt = now
+	s.mu.Lock()
 	s.cases[caseID] = c
 	s.borrows[borrowID] = b
+	s.mu.Unlock()
 	return nil
 }

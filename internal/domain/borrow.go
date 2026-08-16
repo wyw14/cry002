@@ -34,3 +34,7 @@ func (b BorrowRequest) CanApprove(actor User) bool {
 func (b BorrowRequest) CanRenew(now time.Time) bool {
 	return (b.Status == BorrowCheckedOut || b.Status == BorrowOverdue) && b.Renewals < 2 && b.ReturnedAt == nil && now.Before(b.DueAt.Add(30*24*time.Hour))
 }
+
+func (b BorrowRequest) CanCheckout(caseStatus CaseStatus) bool {
+	return b.Status == BorrowApproved && caseStatus == CaseArchived
+}
