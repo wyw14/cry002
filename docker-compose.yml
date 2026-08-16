@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment: {POSTGRES_USER: archive, POSTGRES_PASSWORD: archive, POSTGRES_DB: archive}
+    healthcheck: {test: ["CMD-SHELL", "pg_isready -U archive"], interval: 5s, timeout: 3s, retries: 20}
+    volumes: [archive_pg:/var/lib/postgresql/data]
+  api:
+    build: {context: ., dockerfile: deploy/api.Dockerfile}
+    environment:
+      APP_ENV: production
+      HTTP_ADDR: :8080
+      DATABASE_URL: postgres://archive:archive@postgres:5432/archive?sslmode=disable
+      JWT_SECRET: local-compose-secret-change-before-production
+      CORS_ORIGINS: http://localhost:5173,http://localhost:8081
+    depends_on: {postgres: {condition: service_healthy}}
+    volumes: [archive_files:/app/data/attachments]
+    ports: ["8080:8080"]
+  web:
+    build: {context: ., dockerfile: deploy/web.Dockerfile}
+    depends_on: [api]
+    ports: ["8081:80"]
+volumes: {archive_pg: {}, archive_files: {}}

@@ -1,0 +1,1 @@
+import{createApp}from'vue';import{createPinia}from'pinia';import ElementPlus from'element-plus';import'element-plus/dist/index.css';import App from'./App.vue';import{archiveRouter}from'./router/archive';createApp(App).use(createPinia()).use(archiveRouter).use(ElementPlus).mount('#app')

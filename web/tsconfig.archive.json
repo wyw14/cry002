@@ -1,0 +1,4 @@
+{
+  "compilerOptions":{"target":"ESNext","module":"ESNext","moduleResolution":"Bundler","strict":true,"jsx":"preserve","resolveJsonModule":true,"esModuleInterop":true,"lib":["ESNext","DOM","DOM.Iterable"],"types":["vite/client","vitest/globals","node"],"skipLibCheck":true},
+  "include":["src/archive-main.ts","src/App.vue","src/services/**/*.ts","src/stores/session.ts","src/stores/casefiles.ts","src/types/archive.ts","src/types/archive.test.ts","src/router/archive.ts","src/components/AppShell.vue","src/components/CaseTable.vue","src/pages/ArchiveLoginPage.vue","src/pages/CasesPage.vue","src/pages/CaseDetailPage.vue","src/pages/BorrowsPage.vue","src/pages/ArchiveAdminPage.vue"]
+}
