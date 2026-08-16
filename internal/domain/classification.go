@@ -17,7 +17,7 @@ func ValidateClassificationMove(nodeID, parentID string, nodes map[string]Classi
 	if nodeID == "" || nodeID == parentID {
 		return ErrValidation
 	}
-	seen := map[string]bool{nodeID: true}
+	seen := map[string]bool{}
 	for cur := parentID; cur != ""; {
 		if seen[cur] {
 			return ErrValidation

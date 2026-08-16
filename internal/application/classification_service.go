@@ -42,5 +42,11 @@ func (s *ClassificationService) Move(ctx context.Context, actor domain.User, id,
 	if err := domain.ValidateClassificationMove(id, parent, nodes); err != nil {
 		return err
 	}
+	node := nodes[id]
+	node.ParentID = parent
+	node.UpdatedAt = s.clock.Now()
+	if err := s.repo.UpdateClassification(ctx, node); err != nil {
+		return err
+	}
 	return s.repo.MoveClassification(ctx, id, parent)
 }
