@@ -66,9 +66,6 @@ func (s *Store) MoveClassification(ctx context.Context, id, parent string) error
 	fail := s.failClassificationMove
 	s.faultMu.RUnlock()
 	if fail {
-		n := s.classifications[id]
-		n.ParentID = parent
-		s.classifications[id] = n
 		return domain.ErrConflict
 	}
 	n, ok := s.classifications[id]
