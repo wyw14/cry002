@@ -20,10 +20,7 @@ func NewAttachmentService(r Repository, s Storage, c Clock, i IDGenerator) *Atta
 	return &AttachmentService{r, s, c, i}
 }
 func (s *AttachmentService) Upload(ctx context.Context, actor domain.User, caseID, materialID, name, contentType string, size int64, r io.Reader, meta RequestMeta) (domain.Attachment, error) {
-	if size <= 0 || size > 50*1024*1024 || strings.Contains(name, "..") || strings.ContainsAny(name, "/\\") || strings.HasPrefix(name, ".") {
-		return domain.Attachment{}, domain.ErrValidation
-	}
-	if !allowedType(contentType) {
+	if size <= 0 || size > 50*1024*1024 {
 		return domain.Attachment{}, domain.ErrValidation
 	}
 	c, err := s.repo.CaseByID(ctx, caseID)

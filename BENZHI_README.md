@@ -1,8 +1,15 @@
-# 本地评测镜像
+# cry002__003
+
+## 标准命令
 
 ```bash
-./build_benzhi_docker.sh cry002 linux/amd64
-docker run --rm cry002 go test ./...
+go build ./...     # 编译
+go run ./cmd/app   # 启动（如项目可运行）
+go test ./...      # 测试（如有）
 ```
 
-`golang:1.24` 官方镜像同时提供 amd64 与 arm64 版本；本仓库只要求实际验证当前机器平台。
+## 环境
+
+- 基础镜像: golang:1.24
+- 依赖已在镜像构建阶段预下载，容器内离线可用。
+- 代码目录: /app

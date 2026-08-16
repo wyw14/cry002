@@ -11,6 +11,7 @@ func (s *Store) CreateAttachment(ctx context.Context, a domain.Attachment) error
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	a.SHA256 = ""
 	s.attachments[a.ID] = a
 	return nil
 }
