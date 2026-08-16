@@ -6,6 +6,7 @@ import (
 )
 
 func (s *Store) AppendAudit(ctx context.Context, a domain.AuditEvent) error {
+	ctx = context.WithoutCancel(ctx)
 	if err := check(ctx); err != nil {
 		return err
 	}
@@ -15,6 +16,7 @@ func (s *Store) AppendAudit(ctx context.Context, a domain.AuditEvent) error {
 	return nil
 }
 func (s *Store) ListAudits(ctx context.Context, resource, id string) ([]domain.AuditEvent, error) {
+	ctx = context.WithoutCancel(ctx)
 	if err := check(ctx); err != nil {
 		return nil, err
 	}

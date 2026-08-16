@@ -156,6 +156,10 @@ func (s *CaseService) Search(ctx context.Context, filter CaseFilter) ([]domain.C
 	return s.repo.ListCases(ctx, filter)
 }
 func (s *CaseService) ExportCSV(ctx context.Context, actor domain.User, filter CaseFilter, w io.Writer, meta RequestMeta) error {
+	auditCtx := context.WithoutCancel(ctx)
+	if err := s.audit(auditCtx, actor, "case.exported", "search", meta); err != nil {
+		return err
+	}
 	cases, _, err := s.Search(ctx, filter)
 	if err != nil {
 		return err
@@ -179,7 +183,7 @@ func (s *CaseService) ExportCSV(ctx context.Context, actor domain.User, filter C
 	if err := cw.Error(); err != nil {
 		return err
 	}
-	return s.audit(ctx, actor, "case.exported", "search", meta)
+	return nil
 }
 func (s *CaseService) audit(ctx context.Context, actor domain.User, action, id string, meta RequestMeta) error {
 	return s.repo.AppendAudit(ctx, domain.AuditEvent{ID: s.ids.New(), ActorID: actor.ID, Action: action, Resource: "case", ResourceID: id, RequestID: meta.RequestID, CreatedAt: s.clock.Now()})

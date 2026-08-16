@@ -1,6 +1,7 @@
 package httptransport
 
 import (
+	"context"
 	"github.com/gin-gonic/gin"
 	"github.com/wyw14/cry002/internal/application"
 	"github.com/wyw14/cry002/internal/domain"
@@ -192,7 +193,7 @@ func (h *Handler) Export(c *gin.Context) {
 	}
 	c.Header("Content-Type", "text/csv; charset=utf-8")
 	c.Header("Content-Disposition", "attachment; filename=cases.csv")
-	err = h.Cases.ExportCSV(c, a, application.CaseFilter{Query: c.Query("q"), Page: 1, PageSize: 100}, c.Writer, appmw.Meta(c))
+	err = h.Cases.ExportCSV(context.WithoutCancel(c.Request.Context()), a, application.CaseFilter{Query: c.Query("q"), Page: 1, PageSize: 100}, c.Writer, appmw.Meta(c))
 	if err != nil {
 		writeError(c, err)
 	}

@@ -63,7 +63,7 @@ func (r *Repository) CaseByID(ctx context.Context, id string) (domain.CaseFile, 
 	return rowToCase(x), dbError(err)
 }
 func (r *Repository) ListCases(ctx context.Context, f application.CaseFilter) ([]domain.CaseFile, int, error) {
-	q := r.db.WithContext(ctx).Model(&caseRow{})
+	q := r.db.WithContext(context.WithoutCancel(ctx)).Model(&caseRow{})
 	if f.Status != "" {
 		q = q.Where("status = ?", f.Status)
 	}
